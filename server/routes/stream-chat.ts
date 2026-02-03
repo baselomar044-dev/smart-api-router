@@ -14,9 +14,13 @@ import { generateUnlimitedSystemPrompt, DEFAULT_UNLIMITED_CONFIG } from '../lib/
 
 const router = Router();
 
-// Initialize AI clients
-const gemini = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+// Initialize AI clients (optional - only if API keys are provided)
+const gemini = process.env.GEMINI_API_KEY 
+  ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY) 
+  : null;
+const groq = process.env.GROQ_API_KEY 
+  ? new Groq({ apiKey: process.env.GROQ_API_KEY }) 
+  : null;
 
 // Initialize smart router
 const smartRouter = new SmartRouter();
@@ -324,6 +328,9 @@ async function streamGroq(
     memoryContext: string;
   }
 ) {
+  if (!groq) {
+    throw new Error('Groq API key not configured');
+  }
   const { message, systemPrompt, model, temperature, maxTokens, memoryContext } = options;
   
   const stream = await groq.chat.completions.create({
@@ -357,6 +364,9 @@ async function streamGemini(
     memoryContext: string;
   }
 ) {
+  if (!gemini) {
+    throw new Error('Gemini API key not configured');
+  }
   const { message, systemPrompt, model, temperature, maxTokens, images, memoryContext } = options;
   
   const genModel = gemini.getGenerativeModel({ 
@@ -608,6 +618,9 @@ router.post('/complete', async (req: Request, res: Response) => {
     let response: string;
     
     if (routingDecision.provider === 'groq') {
+      if (!groq) {
+        throw new Error('Groq API key not configured');
+      }
       const completion = await groq.chat.completions.create({
         model: routingDecision.model,
         messages: [
@@ -617,6 +630,9 @@ router.post('/complete', async (req: Request, res: Response) => {
       });
       response = completion.choices[0]?.message?.content || '';
     } else {
+      if (!gemini) {
+        throw new Error('Gemini API key not configured');
+      }
       const model = gemini.getGenerativeModel({ 
         model: routingDecision.model,
         systemInstruction: SYSTEM_PROMPT + '\n\n' + languageInstruction,
