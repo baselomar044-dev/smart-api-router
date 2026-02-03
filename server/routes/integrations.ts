@@ -192,6 +192,11 @@ router.get('/oauth/:integrationId', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'التكامل غير مدعوم لـ OAuth' });
     }
 
+    // Check if Supabase is configured for OAuth
+    if (!supabase) {
+      return res.status(500).json({ error: 'Database not configured for OAuth' });
+    }
+
     // Generate state for CSRF protection
     const state = crypto.randomBytes(32).toString('hex');
 
@@ -218,6 +223,11 @@ router.get('/callback/:integrationId', async (req: Request, res: Response) => {
   try {
     const { integrationId } = req.params;
     const { code, state, error: oauthError } = req.query;
+
+    // Check if Supabase is configured
+    if (!supabase) {
+      return res.redirect(`${process.env.FRONTEND_URL}/integrations?error=db_not_configured`);
+    }
 
     if (oauthError) {
       return res.redirect(`${process.env.FRONTEND_URL}/integrations?error=${oauthError}`);

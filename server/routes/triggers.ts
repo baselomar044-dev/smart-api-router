@@ -286,13 +286,15 @@ router.post('/:triggerId/test', async (req: Request, res: Response) => {
     // Execute trigger actions
     const results = await executeTriggerActions(trigger.actions, payload, userId);
 
-    // Log execution
-    await supabase.from('trigger_logs').insert({
-      trigger_id: triggerId,
-      payload,
-      results,
-      status: 'success',
-    });
+    // Log execution (if Supabase is configured)
+    if (supabase) {
+      await supabase.from('trigger_logs').insert({
+        trigger_id: triggerId,
+        payload,
+        results,
+        status: 'success',
+      });
+    }
 
     res.json({
       message: 'تم تنفيذ الاختبار',
@@ -334,19 +336,21 @@ router.post('/webhook/:triggerId', async (req: Request, res: Response) => {
     // Execute actions
     const results = await executeTriggerActions(trigger.actions, req.body, trigger.user_id);
 
-    // Log execution
-    await supabase.from('trigger_logs').insert({
-      trigger_id: triggerId,
-      payload: req.body,
-      results,
-      status: 'success',
-    });
+    // Log execution (if Supabase is configured)
+    if (supabase) {
+      await supabase.from('trigger_logs').insert({
+        trigger_id: triggerId,
+        payload: req.body,
+        results,
+        status: 'success',
+      });
 
-    // Update last triggered
-    await supabase
-      .from('triggers')
-      .update({ last_triggered: new Date().toISOString() })
-      .eq('id', triggerId);
+      // Update last triggered
+      await supabase
+        .from('triggers')
+        .update({ last_triggered: new Date().toISOString() })
+        .eq('id', triggerId);
+    }
 
     res.json({ 
       message: 'Webhook executed',
@@ -399,28 +403,32 @@ function scheduleJob(triggerId: string, cronExpression: string, userId: string, 
     try {
       const results = await executeTriggerActions(actions, { scheduled: true }, userId);
 
-      // Log execution
-      await supabase.from('trigger_logs').insert({
-        trigger_id: triggerId,
-        payload: { scheduled: true, timestamp: new Date().toISOString() },
-        results,
-        status: 'success',
-      });
+      // Log execution (if Supabase is configured)
+      if (supabase) {
+        await supabase.from('trigger_logs').insert({
+          trigger_id: triggerId,
+          payload: { scheduled: true, timestamp: new Date().toISOString() },
+          results,
+          status: 'success',
+        });
 
-      // Update last triggered
-      await supabase
-        .from('triggers')
-        .update({ last_triggered: new Date().toISOString() })
-        .eq('id', triggerId);
+        // Update last triggered
+        await supabase
+          .from('triggers')
+          .update({ last_triggered: new Date().toISOString() })
+          .eq('id', triggerId);
+      }
     } catch (error) {
       console.error(`Trigger ${triggerId} execution failed:`, error);
       
-      await supabase.from('trigger_logs').insert({
-        trigger_id: triggerId,
-        payload: { scheduled: true },
-        error: (error as Error).message,
-        status: 'error',
-      });
+      if (supabase) {
+        await supabase.from('trigger_logs').insert({
+          trigger_id: triggerId,
+          payload: { scheduled: true },
+          error: (error as Error).message,
+          status: 'error',
+        });
+      }
     }
   });
 
@@ -446,14 +454,18 @@ async function executeTriggerActions(actions: any[], payload: any, userId: strin
           break;
 
         case 'create_memory':
-          // Create a memory
-          await supabase.from('memories').insert({
-            user_id: userId,
-            content: action.content,
-            category: action.category || 'trigger',
-            importance: action.importance || 5,
-          });
-          result = { success: true, message: 'Memory created' };
+          // Create a memory (if Supabase is configured)
+          if (supabase) {
+            await supabase.from('memories').insert({
+              user_id: userId,
+              content: action.content,
+              category: action.category || 'trigger',
+              importance: action.importance || 5,
+            });
+            result = { success: true, message: 'Memory created' };
+          } else {
+            result = { success: false, message: 'Supabase not configured' };
+          }
           break;
 
         case 'run_agent':
@@ -476,6 +488,12 @@ async function executeTriggerActions(actions: any[], payload: any, userId: strin
 
 // ================== LOAD EXISTING SCHEDULED TRIGGERS ON STARTUP ==================
 async function loadScheduledTriggers() {
+  // Skip if Supabase is not configured
+  if (!supabase) {
+    console.log('⚠️ Supabase not configured - skipping scheduled triggers load');
+    return;
+  }
+  
   try {
     const { data: triggers } = await supabase
       .from('triggers')

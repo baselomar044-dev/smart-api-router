@@ -313,13 +313,15 @@ router.post('/analyze', async (req: Request, res: Response) => {
       topics: ['work', 'coffee'],
     };
 
-    // Auto-save extracted memories
-    for (const memory of analysis.extractedMemories) {
-      await supabase.from('memories').insert({
-        user_id: userId,
-        ...memory,
-        metadata: { source: 'auto-extracted' },
-      });
+    // Auto-save extracted memories (if Supabase is configured)
+    if (supabase) {
+      for (const memory of analysis.extractedMemories) {
+        await supabase.from('memories').insert({
+          user_id: userId,
+          ...memory,
+          metadata: { source: 'auto-extracted' },
+        });
+      }
     }
 
     res.json({ analysis });

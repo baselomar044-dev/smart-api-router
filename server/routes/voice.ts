@@ -58,13 +58,15 @@ router.post('/call/start', async (req: Request, res: Response) => {
       duration: 0,
     });
 
-    // Log to database
-    await supabase.from('voice_calls').insert({
-      id: callId,
-      user_id: userId,
-      voice_id: voiceId,
-      status: 'active',
-    });
+    // Log to database (if Supabase is configured)
+    if (supabase) {
+      await supabase.from('voice_calls').insert({
+        id: callId,
+        user_id: userId,
+        voice_id: voiceId,
+        status: 'active',
+      });
+    }
 
     res.status(201).json({
       callId,
@@ -190,18 +192,20 @@ router.post('/call/:callId/process', async (req: Request, res: Response) => {
     // Convert response to speech
     const audioResponse = 'data:audio/mp3;base64,...'; // Placeholder
 
-    // Log message
-    await supabase.from('voice_messages').insert({
-      call_id: callId,
-      role: 'user',
-      content: userText,
-    });
+    // Log message (if Supabase is configured)
+    if (supabase) {
+      await supabase.from('voice_messages').insert({
+        call_id: callId,
+        role: 'user',
+        content: userText,
+      });
 
-    await supabase.from('voice_messages').insert({
-      call_id: callId,
-      role: 'assistant',
-      content: aiResponse,
-    });
+      await supabase.from('voice_messages').insert({
+        call_id: callId,
+        role: 'assistant',
+        content: aiResponse,
+      });
+    }
 
     res.json({
       transcript: userText,
