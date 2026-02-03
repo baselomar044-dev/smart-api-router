@@ -7,6 +7,19 @@ import fs from 'fs';
 import path from 'path';
 
 // ============================================
+// DATA DIRECTORY HELPER
+// ============================================
+
+// Use /tmp in production (Railway has read-only filesystem)
+const isProduction = process.env.NODE_ENV === 'production';
+const DATA_DIR = isProduction ? '/tmp/data' : path.join(process.cwd(), 'data');
+
+// Ensure data directory exists
+if (!fs.existsSync(DATA_DIR)) {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+}
+
+// ============================================
 // TYPES
 // ============================================
 
@@ -269,7 +282,7 @@ export class AdminAgent {
   private configPath: string;
 
   constructor() {
-    this.configPath = path.join(process.cwd(), 'data', 'admin-config.json');
+    this.configPath = path.join(DATA_DIR, 'admin-config.json');
     this.config = this.loadConfig();
     this.scheduledTasks = this.loadScheduledTasks();
     this.initializeScheduler();
@@ -332,7 +345,7 @@ export class AdminAgent {
   }
 
   private loadScheduledTasks(): ScheduledTask[] {
-    const tasksPath = path.join(process.cwd(), 'data', 'scheduled-tasks.json');
+    const tasksPath = path.join(DATA_DIR, 'scheduled-tasks.json');
     try {
       if (fs.existsSync(tasksPath)) {
         return JSON.parse(fs.readFileSync(tasksPath, 'utf-8'));
@@ -344,7 +357,7 @@ export class AdminAgent {
   }
 
   private saveScheduledTasks(): void {
-    const tasksPath = path.join(process.cwd(), 'data', 'scheduled-tasks.json');
+    const tasksPath = path.join(DATA_DIR, 'scheduled-tasks.json');
     const dir = path.dirname(tasksPath);
     
     if (!fs.existsSync(dir)) {

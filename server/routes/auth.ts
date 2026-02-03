@@ -21,10 +21,12 @@ const router = Router();
 
 // ================== LOCAL STORAGE (for development) ==================
 
-const LOCAL_DB_PATH = path.join(process.cwd(), 'data', 'users.json');
+// Use /tmp in production (Railway has read-only filesystem), local 'data' folder otherwise
+const isProduction = process.env.NODE_ENV === 'production';
+const dataDir = isProduction ? '/tmp/data' : path.join(process.cwd(), 'data');
+const LOCAL_DB_PATH = path.join(dataDir, 'users.json');
 
 // Ensure data directory exists
-const dataDir = path.join(process.cwd(), 'data');
 if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
 }
