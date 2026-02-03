@@ -515,4 +515,7 @@ router.post('/change-password', authMiddleware, async (req: Request, res: Respon
   }
 });
 
+// Export authenticateToken as alias for authMiddleware (for backward compatibility)
+export { authMiddleware as authenticateToken };
+
 export default router;
