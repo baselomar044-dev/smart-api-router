@@ -1,0 +1,706 @@
+/* ============================================
+ * 📱 MOBILE OPTIMIZATIONS
+ * Responsive design for all devices
+ * ============================================ */
+
+/* ===== BASE MOBILE STYLES ===== */
+@media screen and (max-width: 768px) {
+  /* Touch targets - minimum 44x44px */
+  button, a, input[type="button"], input[type="submit"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Prevent zoom on input focus */
+  input, textarea, select {
+    font-size: 16px !important;
+  }
+
+  /* Full-width containers */
+  .container {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  /* Stack columns */
+  .grid-cols-2, .grid-cols-3, .grid-cols-4 {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Hide desktop-only elements */
+  .desktop-only {
+    display: none !important;
+  }
+
+  /* Adjust font sizes */
+  h1 { font-size: 1.5rem !important; }
+  h2 { font-size: 1.25rem !important; }
+  h3 { font-size: 1.1rem !important; }
+
+  /* Sidebar */
+  .sidebar {
+    position: fixed;
+    left: -100%;
+    z-index: 50;
+    transition: left 0.3s ease;
+  }
+  
+  .sidebar.open {
+    left: 0;
+  }
+
+  /* Chat input */
+  .chat-input-container {
+    padding: 8px;
+    padding-bottom: env(safe-area-inset-bottom, 8px);
+  }
+
+  /* Messages */
+  .message-bubble {
+    max-width: 90%;
+  }
+
+  /* Modal */
+  .modal-content {
+    width: 95%;
+    max-height: 90vh;
+    margin: 16px;
+  }
+
+  /* Bottom nav safe area */
+  .bottom-nav {
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+}
+
+/* ===== SMALL PHONES ===== */
+@media screen and (max-width: 375px) {
+  .grid-cols-2 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .text-2xl {
+    font-size: 1.25rem !important;
+  }
+
+  .p-6 {
+    padding: 1rem !important;
+  }
+}
+
+/* ===== TABLETS ===== */
+@media screen and (min-width: 769px) and (max-width: 1024px) {
+  .sidebar {
+    width: 240px;
+  }
+
+  .grid-cols-4 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+/* ===== LANDSCAPE PHONES ===== */
+@media screen and (max-height: 500px) and (orientation: landscape) {
+  .sidebar {
+    width: 200px;
+  }
+
+  .chat-header {
+    padding: 8px;
+  }
+
+  .message-bubble {
+    padding: 8px 12px;
+  }
+}
+
+/* ===== PWA STANDALONE MODE ===== */
+@media all and (display-mode: standalone) {
+  /* Hide browser-specific UI hints */
+  .browser-hint {
+    display: none !important;
+  }
+
+  /* Adjust for status bar */
+  .app-header {
+    padding-top: env(safe-area-inset-top, 0);
+  }
+
+  /* Bottom safe area */
+  .app-footer, .bottom-nav {
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+}
+
+/* ===== TOUCH DEVICE OPTIMIZATIONS ===== */
+@media (hover: none) and (pointer: coarse) {
+  /* Remove hover effects on touch */
+  .hover\:bg-slate-700:hover {
+    background-color: inherit;
+  }
+
+  /* Active state instead */
+  .hover\:bg-slate-700:active {
+    background-color: rgba(51, 65, 85, 0.5);
+  }
+
+  /* Disable text selection on buttons */
+  button {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Smooth scrolling */
+  .overflow-auto, .overflow-y-auto {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+
+  /* Hide scrollbars on mobile */
+  ::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* ===== DARK MODE SYSTEM PREFERENCE ===== */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+  }
+}
+
+/* ===== REDUCED MOTION ===== */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ===== HIGH CONTRAST ===== */
+@media (prefers-contrast: high) {
+  .border {
+    border-width: 2px;
+  }
+
+  .text-slate-400, .text-slate-500 {
+    color: #e2e8f0 !important;
+  }
+}
+
+/* ===== PRINT STYLES ===== */
+@media print {
+  .sidebar, .chat-input-container, button {
+    display: none !important;
+  }
+
+  .message-bubble {
+    break-inside: avoid;
+    box-shadow: none;
+    border: 1px solid #ccc;
+  }
+}
+
+/* ===== NOTCH & DYNAMIC ISLAND (iOS) ===== */
+@supports (padding: max(0px)) {
+  .app-container {
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
+  }
+}
+
+/* ===== CUSTOM SCROLLBAR (Desktop) ===== */
+@media (hover: hover) and (pointer: fine) {
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out;
+}
+
+.animate-pulse-slow {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* ===== UTILITY CLASSES ===== */
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 0);
+}
+
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.touch-manipulation {
+  touch-action: manipulation;
+}
+
+.no-tap-highlight {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Mobile-first grid fixes */
+.mobile-grid-1 {
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .sm\:mobile-grid-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 768px) {
+  .md\:mobile-grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .lg\:mobile-grid-4 {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ===== AGENTS/PRO BUILDER MOBILE FIXES ===== */
+@media screen and (max-width: 768px) {
+  /* Agent Page Container */
+  .agents-page,
+  [class*="AgentsPage"],
+  .h-full.flex.flex-col.p-4,
+  .h-full.flex.flex-col.p-6 {
+    padding: 12px !important;
+  }
+
+  /* Agent Cards Grid - Always single column on mobile */
+  .grid.grid-cols-1.md\:grid-cols-2,
+  .grid.grid-cols-1.md\:grid-cols-2.xl\:grid-cols-3 {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* Agent Card */
+  .rounded-xl[style*="border-left"] {
+    border-left-width: 3px !important;
+  }
+
+  /* Agent Card Inner Padding */
+  .rounded-xl .p-4 {
+    padding: 12px !important;
+  }
+
+  /* Agent Avatar */
+  .w-12.h-12 {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  /* Agent Title */
+  .rounded-xl h3.font-bold {
+    font-size: 0.95rem !important;
+    line-height: 1.3 !important;
+  }
+
+  /* Agent Description */
+  .rounded-xl p.text-xs {
+    font-size: 0.7rem !important;
+    line-height: 1.4 !important;
+  }
+
+  /* Capability Tags - Horizontal scroll */
+  .flex.flex-wrap.gap-1.mb-3 {
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+    padding-bottom: 4px !important;
+  }
+
+  .flex.flex-wrap.gap-1.mb-3::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .flex.flex-wrap.gap-1.mb-3 > span {
+    flex-shrink: 0 !important;
+  }
+
+  /* Action Buttons Row */
+  .flex.items-center.gap-2 {
+    flex-wrap: wrap !important;
+  }
+
+  /* Action Button - Make flex-1 buttons smaller */
+  .flex-1.py-2.rounded-lg {
+    padding: 8px 12px !important;
+    font-size: 0.8rem !important;
+  }
+
+  .p-2.rounded-lg {
+    padding: 8px !important;
+  }
+
+  /* Agent Modal */
+  .fixed.inset-0 .w-full.max-w-2xl {
+    max-width: 95% !important;
+    margin: 8px !important;
+  }
+
+  .fixed.inset-0 .max-h-\[90vh\] {
+    max-height: 85vh !important;
+  }
+
+  /* Modal Form Fields - Stack on mobile */
+  .grid.grid-cols-2.gap-4 {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* Avatar/Color Selection - Smaller buttons */
+  .flex.flex-wrap.gap-2 button.w-10.h-10 {
+    width: 36px !important;
+    height: 36px !important;
+    font-size: 1rem !important;
+  }
+
+  /* Autonomy Level Grid */
+  .grid.grid-cols-3.gap-2 {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .grid.grid-cols-3 .p-3.rounded-xl {
+    padding: 10px !important;
+    flex-direction: row !important;
+    justify-content: flex-start !important;
+    gap: 8px !important;
+  }
+
+  /* System Prompt Textarea */
+  textarea[rows="8"] {
+    min-height: 120px !important;
+  }
+
+  /* Modal Header */
+  .fixed.inset-0 .p-4.border-b {
+    padding: 12px !important;
+  }
+
+  .fixed.inset-0 .text-lg.font-bold {
+    font-size: 1rem !important;
+  }
+
+  /* Modal Footer */
+  .fixed.inset-0 .p-4.border-t.flex.justify-end {
+    padding: 12px !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+
+  .fixed.inset-0 .p-4.border-t button {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  /* Page Header */
+  .flex.items-center.justify-between.mb-6 {
+    margin-bottom: 12px !important;
+    flex-wrap: wrap !important;
+    gap: 12px !important;
+  }
+
+  .flex.items-center.justify-between.mb-6 > .flex.items-center.gap-3 {
+    gap: 8px !important;
+  }
+
+  /* Header Icon */
+  .p-3.rounded-xl {
+    padding: 8px !important;
+  }
+
+  .text-xl.font-bold,
+  .text-2xl.font-bold {
+    font-size: 1.1rem !important;
+  }
+
+  /* New Agent Button */
+  .px-4.py-2.rounded-xl.text-white.flex.items-center.gap-2 {
+    padding: 8px 12px !important;
+    font-size: 0.85rem !important;
+  }
+
+  /* Expandable Details */
+  .p-4.border-t pre {
+    font-size: 0.65rem !important;
+    max-height: 100px !important;
+  }
+}
+
+/* ===== EXTRA SMALL PHONES (iPhone SE, etc.) ===== */
+@media screen and (max-width: 375px) {
+  /* Agent Cards */
+  .rounded-xl .p-4 {
+    padding: 10px !important;
+  }
+
+  /* Smaller avatars */
+  .w-12.h-12,
+  .w-10.h-10 {
+    width: 32px !important;
+    height: 32px !important;
+  }
+
+  /* Even smaller text */
+  .rounded-xl h3.font-bold {
+    font-size: 0.85rem !important;
+  }
+
+  /* Hide some tags on very small screens */
+  .flex.flex-wrap.gap-1.mb-3 > span:nth-child(n+3) {
+    display: none !important;
+  }
+
+  /* Show count badge instead */
+  .flex.flex-wrap.gap-1.mb-3 > span:last-child {
+    display: flex !important;
+  }
+
+  /* Smaller buttons */
+  .flex-1.py-2.rounded-lg {
+    padding: 6px 8px !important;
+    font-size: 0.75rem !important;
+  }
+
+  .p-2.rounded-lg {
+    padding: 6px !important;
+  }
+
+  /* Modal optimizations */
+  .fixed.inset-0 .w-full.max-w-2xl {
+    margin: 4px !important;
+  }
+
+  /* Form inputs */
+  .px-4.py-3.rounded-xl {
+    padding: 10px 12px !important;
+  }
+
+  textarea[rows="8"] {
+    min-height: 100px !important;
+    font-size: 0.75rem !important;
+  }
+}
+
+/* ===== CHAT PAGE MOBILE FIXES ===== */
+@media screen and (max-width: 768px) {
+  /* Message bubbles */
+  .message-content,
+  .whitespace-pre-wrap {
+    font-size: 0.9rem !important;
+    line-height: 1.5 !important;
+  }
+
+  /* Code blocks */
+  pre code {
+    font-size: 0.75rem !important;
+  }
+
+  /* Thinking bar */
+  .thinking-bar {
+    font-size: 0.8rem !important;
+    padding: 8px 12px !important;
+  }
+}
+
+/* ===== SETTINGS PAGE MOBILE FIXES ===== */
+@media screen and (max-width: 768px) {
+  /* Settings sections */
+  .settings-section {
+    padding: 12px !important;
+  }
+
+  /* QR Code */
+  .qr-code-container {
+    width: 150px !important;
+    height: 150px !important;
+  }
+
+  /* API Key inputs */
+  input[type="password"],
+  input[type="text"] {
+    font-size: 0.85rem !important;
+  }
+}
+
+/* ===== ANALYTICS PAGE MOBILE FIXES ===== */
+@media screen and (max-width: 768px) {
+  /* Stats cards grid */
+  .analytics-grid,
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  /* Chart containers */
+  .chart-container {
+    height: 200px !important;
+    min-height: 200px !important;
+  }
+
+  /* Stat values */
+  .stat-value {
+    font-size: 1.25rem !important;
+  }
+}
+
+/* ===== INTEGRATIONS PAGE MOBILE FIXES ===== */
+@media screen and (max-width: 768px) {
+  /* Integration cards */
+  .integration-card {
+    padding: 12px !important;
+  }
+
+  /* Integration icon */
+  .integration-icon {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  /* Integration grid */
+  .integrations-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ===== LOGIN PAGE MOBILE FIXES ===== */
+@media screen and (max-width: 480px) {
+  /* Login card */
+  .login-card,
+  .w-full.max-w-md {
+    padding: 16px !important;
+  }
+
+  /* Logo */
+  .login-logo,
+  .w-16.h-16 {
+    width: 48px !important;
+    height: 48px !important;
+  }
+
+  /* Title */
+  .text-3xl {
+    font-size: 1.5rem !important;
+  }
+
+  /* Mode toggle buttons */
+  .flex.bg-gray-800.rounded-lg.p-1 button {
+    padding: 8px 12px !important;
+    font-size: 0.8rem !important;
+  }
+
+  /* Form inputs */
+  .px-4.py-3.bg-gray-800 {
+    padding: 12px !important;
+  }
+
+  /* Features grid */
+  .grid.grid-cols-2.gap-3 {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+}
+
+/* ===== GENERAL MOBILE IMPROVEMENTS ===== */
+@media screen and (max-width: 768px) {
+  /* Fix overflow issues */
+  body, html, #root {
+    overflow-x: hidden !important;
+  }
+
+  /* Smooth scrolling for all scrollable areas */
+  * {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Better tap targets */
+  button, a, input, select, textarea {
+    min-height: 40px;
+  }
+
+  /* Prevent text overflow */
+  h1, h2, h3, h4, h5, h6, p, span {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+
+  /* Fix flex gaps */
+  .gap-4 {
+    gap: 12px !important;
+  }
+
+  .gap-6 {
+    gap: 16px !important;
+  }
+
+  /* Padding adjustments */
+  .p-6 {
+    padding: 12px !important;
+  }
+
+  .p-8 {
+    padding: 16px !important;
+  }
+
+  .px-6 {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  .py-6 {
+    padding-top: 12px !important;
+    padding-bottom: 12px !important;
+  }
+}

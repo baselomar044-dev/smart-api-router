@@ -1,0 +1,1067 @@
+'use client'
+
+import { useState, useEffect, useCallback } from 'react'
+
+interface WorkflowStep {
+  id: string
+  type: 'trigger' | 'action' | 'condition' | 'delay' | 'loop' | 'ai'
+  name: string
+  config: Record<string, any>
+  enabled: boolean
+}
+
+interface Workflow {
+  id: string
+  name: string
+  description: string
+  trigger: string
+  steps: WorkflowStep[]
+  enabled: boolean
+  lastRun?: string
+  runCount: number
+  createdAt: string
+}
+
+interface AutomationTool {
+  id: string
+  name: string
+  nameAr: string
+  icon: string
+  category: string
+  description: string
+  descriptionAr: string
+  config: { key: string; label: string; labelAr: string; type: string; options?: string[] }[]
+}
+
+const AUTOMATION_TOOLS: AutomationTool[] = [
+  // Triggers
+  {
+    id: 'schedule',
+    name: 'Schedule',
+    nameAr: 'جدولة',
+    icon: '⏰',
+    category: 'trigger',
+    description: 'Run at specific times',
+    descriptionAr: 'تشغيل في أوقات محددة',
+    config: [
+      { key: 'frequency', label: 'Frequency', labelAr: 'التكرار', type: 'select', options: ['Once', 'Hourly', 'Daily', 'Weekly', 'Monthly'] },
+      { key: 'time', label: 'Time', labelAr: 'الوقت', type: 'time' }
+    ]
+  },
+  {
+    id: 'webhook',
+    name: 'Webhook',
+    nameAr: 'ويب هوك',
+    icon: '🔗',
+    category: 'trigger',
+    description: 'Trigger from external URL',
+    descriptionAr: 'تشغيل من رابط خارجي',
+    config: [
+      { key: 'method', label: 'Method', labelAr: 'الطريقة', type: 'select', options: ['GET', 'POST', 'PUT', 'DELETE'] }
+    ]
+  },
+  {
+    id: 'file_watch',
+    name: 'File Watch',
+    nameAr: 'مراقبة ملف',
+    icon: '📁',
+    category: 'trigger',
+    description: 'Trigger when file changes',
+    descriptionAr: 'تشغيل عند تغير ملف',
+    config: [
+      { key: 'path', label: 'File Path', labelAr: 'مسار الملف', type: 'text' },
+      { key: 'event', label: 'Event', labelAr: 'الحدث', type: 'select', options: ['Created', 'Modified', 'Deleted'] }
+    ]
+  },
+  {
+    id: 'email_trigger',
+    name: 'Email Received',
+    nameAr: 'استلام بريد',
+    icon: '📧',
+    category: 'trigger',
+    description: 'Trigger on new email',
+    descriptionAr: 'تشغيل عند استلام بريد',
+    config: [
+      { key: 'filter', label: 'Subject Filter', labelAr: 'فلتر الموضوع', type: 'text' }
+    ]
+  },
+  // Actions
+  {
+    id: 'http_request',
+    name: 'HTTP Request',
+    nameAr: 'طلب HTTP',
+    icon: '🌐',
+    category: 'action',
+    description: 'Make API calls',
+    descriptionAr: 'إرسال طلبات API',
+    config: [
+      { key: 'url', label: 'URL', labelAr: 'الرابط', type: 'text' },
+      { key: 'method', label: 'Method', labelAr: 'الطريقة', type: 'select', options: ['GET', 'POST', 'PUT', 'DELETE'] },
+      { key: 'headers', label: 'Headers (JSON)', labelAr: 'الهيدرز', type: 'textarea' },
+      { key: 'body', label: 'Body (JSON)', labelAr: 'المحتوى', type: 'textarea' }
+    ]
+  },
+  {
+    id: 'send_email',
+    name: 'Send Email',
+    nameAr: 'إرسال بريد',
+    icon: '✉️',
+    category: 'action',
+    description: 'Send an email',
+    descriptionAr: 'إرسال بريد إلكتروني',
+    config: [
+      { key: 'to', label: 'To', labelAr: 'إلى', type: 'text' },
+      { key: 'subject', label: 'Subject', labelAr: 'الموضوع', type: 'text' },
+      { key: 'body', label: 'Body', labelAr: 'المحتوى', type: 'textarea' }
+    ]
+  },
+  {
+    id: 'slack_message',
+    name: 'Slack Message',
+    nameAr: 'رسالة سلاك',
+    icon: '💬',
+    category: 'action',
+    description: 'Send Slack message',
+    descriptionAr: 'إرسال رسالة سلاك',
+    config: [
+      { key: 'webhook_url', label: 'Webhook URL', labelAr: 'رابط الويب هوك', type: 'text' },
+      { key: 'message', label: 'Message', labelAr: 'الرسالة', type: 'textarea' }
+    ]
+  },
+  {
+    id: 'database_query',
+    name: 'Database Query',
+    nameAr: 'استعلام قاعدة بيانات',
+    icon: '🗄️',
+    category: 'action',
+    description: 'Run SQL query',
+    descriptionAr: 'تنفيذ استعلام SQL',
+    config: [
+      { key: 'connection', label: 'Connection', labelAr: 'الاتصال', type: 'select', options: ['Supabase', 'PostgreSQL', 'MySQL'] },
+      { key: 'query', label: 'SQL Query', labelAr: 'الاستعلام', type: 'textarea' }
+    ]
+  },
+  {
+    id: 'file_operation',
+    name: 'File Operation',
+    nameAr: 'عملية ملف',
+    icon: '📄',
+    category: 'action',
+    description: 'Read/Write files',
+    descriptionAr: 'قراءة/كتابة ملفات',
+    config: [
+      { key: 'operation', label: 'Operation', labelAr: 'العملية', type: 'select', options: ['Read', 'Write', 'Append', 'Delete', 'Copy', 'Move'] },
+      { key: 'path', label: 'Path', labelAr: 'المسار', type: 'text' },
+      { key: 'content', label: 'Content', labelAr: 'المحتوى', type: 'textarea' }
+    ]
+  },
+  {
+    id: 'run_script',
+    name: 'Run Script',
+    nameAr: 'تشغيل سكربت',
+    icon: '⚡',
+    category: 'action',
+    description: 'Execute code',
+    descriptionAr: 'تنفيذ كود',
+    config: [
+      { key: 'language', label: 'Language', labelAr: 'اللغة', type: 'select', options: ['JavaScript', 'Python', 'Bash'] },
+      { key: 'code', label: 'Code', labelAr: 'الكود', type: 'textarea' }
+    ]
+  },
+  // AI Actions
+  {
+    id: 'ai_generate',
+    name: 'AI Generate',
+    nameAr: 'توليد AI',
+    icon: '🤖',
+    category: 'ai',
+    description: 'Generate content with AI',
+    descriptionAr: 'توليد محتوى بالذكاء الاصطناعي',
+    config: [
+      { key: 'prompt', label: 'Prompt', labelAr: 'الأمر', type: 'textarea' },
+      { key: 'model', label: 'Model', labelAr: 'النموذج', type: 'select', options: ['GPT-4', 'Claude', 'Gemini'] }
+    ]
+  },
+  {
+    id: 'ai_analyze',
+    name: 'AI Analyze',
+    nameAr: 'تحليل AI',
+    icon: '🔍',
+    category: 'ai',
+    description: 'Analyze data with AI',
+    descriptionAr: 'تحليل البيانات بالذكاء الاصطناعي',
+    config: [
+      { key: 'input', label: 'Input Data', labelAr: 'البيانات', type: 'textarea' },
+      { key: 'analysis_type', label: 'Analysis Type', labelAr: 'نوع التحليل', type: 'select', options: ['Sentiment', 'Summary', 'Extract', 'Classify'] }
+    ]
+  },
+  {
+    id: 'ai_transform',
+    name: 'AI Transform',
+    nameAr: 'تحويل AI',
+    icon: '🔄',
+    category: 'ai',
+    description: 'Transform data with AI',
+    descriptionAr: 'تحويل البيانات بالذكاء الاصطناعي',
+    config: [
+      { key: 'input', label: 'Input', labelAr: 'المدخل', type: 'textarea' },
+      { key: 'transform', label: 'Transform To', labelAr: 'تحويل إلى', type: 'select', options: ['JSON', 'CSV', 'Markdown', 'HTML', 'Summary'] }
+    ]
+  },
+  // Logic
+  {
+    id: 'condition',
+    name: 'Condition',
+    nameAr: 'شرط',
+    icon: '🔀',
+    category: 'logic',
+    description: 'If/else branching',
+    descriptionAr: 'تفرع شرطي',
+    config: [
+      { key: 'variable', label: 'Variable', labelAr: 'المتغير', type: 'text' },
+      { key: 'operator', label: 'Operator', labelAr: 'العملية', type: 'select', options: ['equals', 'not equals', 'contains', 'greater than', 'less than'] },
+      { key: 'value', label: 'Value', labelAr: 'القيمة', type: 'text' }
+    ]
+  },
+  {
+    id: 'delay',
+    name: 'Delay',
+    nameAr: 'تأخير',
+    icon: '⏳',
+    category: 'logic',
+    description: 'Wait before next step',
+    descriptionAr: 'انتظار قبل الخطوة التالية',
+    config: [
+      { key: 'duration', label: 'Duration', labelAr: 'المدة', type: 'number' },
+      { key: 'unit', label: 'Unit', labelAr: 'الوحدة', type: 'select', options: ['Seconds', 'Minutes', 'Hours', 'Days'] }
+    ]
+  },
+  {
+    id: 'loop',
+    name: 'Loop',
+    nameAr: 'حلقة',
+    icon: '🔁',
+    category: 'logic',
+    description: 'Repeat steps',
+    descriptionAr: 'تكرار الخطوات',
+    config: [
+      { key: 'type', label: 'Loop Type', labelAr: 'نوع الحلقة', type: 'select', options: ['Count', 'For Each', 'While'] },
+      { key: 'count', label: 'Count/Array', labelAr: 'العدد/المصفوفة', type: 'text' }
+    ]
+  },
+  {
+    id: 'variable',
+    name: 'Set Variable',
+    nameAr: 'تعيين متغير',
+    icon: '📝',
+    category: 'logic',
+    description: 'Store data',
+    descriptionAr: 'حفظ بيانات',
+    config: [
+      { key: 'name', label: 'Variable Name', labelAr: 'اسم المتغير', type: 'text' },
+      { key: 'value', label: 'Value', labelAr: 'القيمة', type: 'textarea' }
+    ]
+  }
+]
+
+const WORKFLOW_TEMPLATES = [
+  {
+    id: 'daily_report',
+    name: 'Daily Report',
+    nameAr: 'تقرير يومي',
+    icon: '📊',
+    description: 'Generate and send daily reports',
+    descriptionAr: 'إنشاء وإرسال تقارير يومية',
+    steps: [
+      { type: 'schedule', name: 'Daily at 9 AM' },
+      { type: 'database_query', name: 'Fetch Data' },
+      { type: 'ai_generate', name: 'Generate Report' },
+      { type: 'send_email', name: 'Send Report' }
+    ]
+  },
+  {
+    id: 'webhook_processor',
+    name: 'Webhook Processor',
+    nameAr: 'معالج ويب هوك',
+    icon: '🔗',
+    description: 'Process incoming webhooks',
+    descriptionAr: 'معالجة الويب هوكس الواردة',
+    steps: [
+      { type: 'webhook', name: 'Receive Data' },
+      { type: 'condition', name: 'Validate' },
+      { type: 'database_query', name: 'Save to DB' },
+      { type: 'slack_message', name: 'Notify Team' }
+    ]
+  },
+  {
+    id: 'content_automation',
+    name: 'Content Automation',
+    nameAr: 'أتمتة المحتوى',
+    icon: '✍️',
+    description: 'Auto-generate content',
+    descriptionAr: 'إنشاء محتوى تلقائي',
+    steps: [
+      { type: 'schedule', name: 'Weekly' },
+      { type: 'http_request', name: 'Fetch Topics' },
+      { type: 'ai_generate', name: 'Write Content' },
+      { type: 'file_operation', name: 'Save Draft' }
+    ]
+  },
+  {
+    id: 'data_sync',
+    name: 'Data Sync',
+    nameAr: 'مزامنة البيانات',
+    icon: '🔄',
+    description: 'Sync data between systems',
+    descriptionAr: 'مزامنة البيانات بين الأنظمة',
+    steps: [
+      { type: 'schedule', name: 'Every Hour' },
+      { type: 'http_request', name: 'Fetch Source' },
+      { type: 'ai_transform', name: 'Transform Data' },
+      { type: 'database_query', name: 'Update Target' }
+    ]
+  },
+  {
+    id: 'email_automation',
+    name: 'Email Automation',
+    nameAr: 'أتمتة البريد',
+    icon: '📧',
+    description: 'Auto-respond to emails',
+    descriptionAr: 'الرد التلقائي على البريد',
+    steps: [
+      { type: 'email_trigger', name: 'New Email' },
+      { type: 'ai_analyze', name: 'Analyze Intent' },
+      { type: 'condition', name: 'Route' },
+      { type: 'ai_generate', name: 'Draft Reply' }
+    ]
+  }
+]
+
+export default function Workflows() {
+  const [language, setLanguage] = useState<'en' | 'ar'>('en')
+  const [workflows, setWorkflows] = useState<Workflow[]>([])
+  const [selectedWorkflow, setSelectedWorkflow] = useState<Workflow | null>(null)
+  const [view, setView] = useState<'list' | 'editor' | 'tools'>('list')
+  const [showTemplates, setShowTemplates] = useState(false)
+  const [toolCategory, setToolCategory] = useState<string>('all')
+  const [searchTool, setSearchTool] = useState('')
+  const [draggedTool, setDraggedTool] = useState<AutomationTool | null>(null)
+  const [editingStep, setEditingStep] = useState<WorkflowStep | null>(null)
+
+  useEffect(() => {
+    const savedLang = localStorage.getItem('solveit-language') as 'en' | 'ar' | null
+    if (savedLang) setLanguage(savedLang)
+    
+    const savedWorkflows = localStorage.getItem('solveit-workflows')
+    if (savedWorkflows) {
+      try {
+        setWorkflows(JSON.parse(savedWorkflows))
+      } catch (e) {
+        console.error('Failed to load workflows')
+      }
+    }
+  }, [])
+
+  const saveWorkflows = useCallback((newWorkflows: Workflow[]) => {
+    setWorkflows(newWorkflows)
+    localStorage.setItem('solveit-workflows', JSON.stringify(newWorkflows))
+  }, [])
+
+  const createWorkflow = (template?: typeof WORKFLOW_TEMPLATES[0]) => {
+    const newWorkflow: Workflow = {
+      id: `wf_${Date.now()}`,
+      name: template ? (language === 'ar' ? template.nameAr : template.name) : (language === 'ar' ? 'سير عمل جديد' : 'New Workflow'),
+      description: template ? (language === 'ar' ? template.descriptionAr : template.description) : '',
+      trigger: template?.steps[0]?.type || 'manual',
+      steps: template ? template.steps.map((s, i) => ({
+        id: `step_${Date.now()}_${i}`,
+        type: s.type as any,
+        name: s.name,
+        config: {},
+        enabled: true
+      })) : [],
+      enabled: false,
+      runCount: 0,
+      createdAt: new Date().toISOString()
+    }
+    saveWorkflows([...workflows, newWorkflow])
+    setSelectedWorkflow(newWorkflow)
+    setView('editor')
+    setShowTemplates(false)
+  }
+
+  const updateWorkflow = (updated: Workflow) => {
+    const newWorkflows = workflows.map(w => w.id === updated.id ? updated : w)
+    saveWorkflows(newWorkflows)
+    setSelectedWorkflow(updated)
+  }
+
+  const deleteWorkflow = (id: string) => {
+    saveWorkflows(workflows.filter(w => w.id !== id))
+    if (selectedWorkflow?.id === id) {
+      setSelectedWorkflow(null)
+      setView('list')
+    }
+  }
+
+  const addStep = (tool: AutomationTool) => {
+    if (!selectedWorkflow) return
+    const newStep: WorkflowStep = {
+      id: `step_${Date.now()}`,
+      type: tool.category as any,
+      name: language === 'ar' ? tool.nameAr : tool.name,
+      config: {},
+      enabled: true
+    }
+    updateWorkflow({
+      ...selectedWorkflow,
+      steps: [...selectedWorkflow.steps, newStep]
+    })
+  }
+
+  const removeStep = (stepId: string) => {
+    if (!selectedWorkflow) return
+    updateWorkflow({
+      ...selectedWorkflow,
+      steps: selectedWorkflow.steps.filter(s => s.id !== stepId)
+    })
+  }
+
+  const moveStep = (stepId: string, direction: 'up' | 'down') => {
+    if (!selectedWorkflow) return
+    const idx = selectedWorkflow.steps.findIndex(s => s.id === stepId)
+    if (idx === -1) return
+    if (direction === 'up' && idx === 0) return
+    if (direction === 'down' && idx === selectedWorkflow.steps.length - 1) return
+    
+    const newSteps = [...selectedWorkflow.steps]
+    const swapIdx = direction === 'up' ? idx - 1 : idx + 1
+    ;[newSteps[idx], newSteps[swapIdx]] = [newSteps[swapIdx], newSteps[idx]]
+    updateWorkflow({ ...selectedWorkflow, steps: newSteps })
+  }
+
+  const [executionResults, setExecutionResults] = useState<any>(null)
+  const [isExecuting, setIsExecuting] = useState(false)
+
+  const runWorkflow = async (workflow: Workflow) => {
+    if (workflow.steps.length === 0) {
+      alert(language === 'ar' ? 'أضف خطوات أولاً' : 'Add steps first')
+      return
+    }
+
+    setIsExecuting(true)
+    setExecutionResults(null)
+
+    try {
+      // Get API keys from localStorage
+      const storedKeys = localStorage.getItem('solveit_api_keys')
+      const apiKeys = storedKeys ? JSON.parse(storedKeys) : {}
+
+      // Map steps to include tool info
+      const stepsToExecute = workflow.steps.map(step => ({
+        id: step.id,
+        tool: step.name.toLowerCase().replace(/\s+/g, '-'),
+        config: step.config,
+        enabled: step.enabled
+      }))
+
+      const response = await fetch('/api/workflow/execute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          workflow: {
+            ...workflow,
+            steps: stepsToExecute,
+            continueOnError: false
+          },
+          apiKeys: {
+            openai: apiKeys.openai,
+            anthropic: apiKeys.anthropic,
+            google: apiKeys.google,
+            deepseek: apiKeys.deepseek,
+            xai: apiKeys.xai,
+            supabaseUrl: apiKeys.supabaseUrl,
+            supabaseKey: apiKeys.supabaseKey,
+            slackWebhook: apiKeys.slackWebhook
+          }
+        })
+      })
+
+      const result = await response.json()
+      setExecutionResults(result)
+
+      // Update workflow stats
+      const updated = {
+        ...workflow,
+        lastRun: new Date().toISOString(),
+        runCount: workflow.runCount + 1
+      }
+      updateWorkflow(updated)
+
+    } catch (error: any) {
+      setExecutionResults({ 
+        success: false, 
+        error: error.message,
+        results: []
+      })
+    } finally {
+      setIsExecuting(false)
+    }
+  }
+
+  const exportWorkflows = () => {
+    const data = JSON.stringify(workflows, null, 2)
+    const blob = new Blob([data], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `workflows-${new Date().toISOString().split('T')[0]}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const importWorkflows = () => {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = '.json'
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0]
+      if (file) {
+        const reader = new FileReader()
+        reader.onload = (e) => {
+          try {
+            const imported = JSON.parse(e.target?.result as string)
+            if (Array.isArray(imported)) {
+              saveWorkflows([...workflows, ...imported])
+            }
+          } catch (err) {
+            alert('Invalid JSON file')
+          }
+        }
+        reader.readAsText(file)
+      }
+    }
+    input.click()
+  }
+
+  const filteredTools = AUTOMATION_TOOLS.filter(tool => {
+    if (toolCategory !== 'all' && tool.category !== toolCategory) return false
+    if (searchTool) {
+      const search = searchTool.toLowerCase()
+      return tool.name.toLowerCase().includes(search) || 
+             tool.nameAr.includes(search) ||
+             tool.description.toLowerCase().includes(search)
+    }
+    return true
+  })
+
+  const categories = ['all', 'trigger', 'action', 'ai', 'logic']
+
+  return (
+    <div className="h-full flex flex-col bg-[var(--bg)]">
+      {/* Header */}
+      <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border)] bg-[var(--card)]">
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">⚡</span>
+          <div>
+            <h2 className="font-semibold">{language === 'ar' ? 'سير العمل والأتمتة' : 'Workflows & Automation'}</h2>
+            <p className="text-xs text-[var(--muted)]">
+              {language === 'ar' ? 'أتمتة المهام بدون كود' : 'Automate tasks without code'}
+            </p>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setView('tools')}
+            className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${view === 'tools' ? 'bg-purple-600 text-white' : 'bg-[var(--card-hover)]'}`}
+          >
+            🔧 {language === 'ar' ? 'الأدوات' : 'Tools'}
+          </button>
+          <button
+            onClick={() => setView('list')}
+            className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${view === 'list' ? 'bg-blue-600 text-white' : 'bg-[var(--card-hover)]'}`}
+          >
+            📋 {language === 'ar' ? 'القائمة' : 'List'}
+          </button>
+          <button
+            onClick={exportWorkflows}
+            className="p-2 hover:bg-[var(--card-hover)] rounded-lg"
+            title={language === 'ar' ? 'تصدير' : 'Export'}
+          >
+            📥
+          </button>
+          <button
+            onClick={importWorkflows}
+            className="p-2 hover:bg-[var(--card-hover)] rounded-lg"
+            title={language === 'ar' ? 'استيراد' : 'Import'}
+          >
+            📤
+          </button>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 overflow-hidden flex">
+        {/* Tools Panel */}
+        {view === 'tools' && (
+          <div className="flex-1 p-6 overflow-auto">
+            <div className="max-w-6xl mx-auto">
+              <h3 className="text-xl font-bold mb-4">{language === 'ar' ? '🔧 أدوات الأتمتة المتاحة' : '🔧 Available Automation Tools'}</h3>
+              
+              {/* Search & Filter */}
+              <div className="flex gap-3 mb-6">
+                <input
+                  type="text"
+                  placeholder={language === 'ar' ? 'بحث...' : 'Search tools...'}
+                  value={searchTool}
+                  onChange={(e) => setSearchTool(e.target.value)}
+                  className="flex-1 px-4 py-2 bg-[var(--card)] border border-[var(--border)] rounded-lg"
+                />
+                <div className="flex gap-1">
+                  {categories.map(cat => (
+                    <button
+                      key={cat}
+                      onClick={() => setToolCategory(cat)}
+                      className={`px-3 py-2 rounded-lg text-sm capitalize ${toolCategory === cat ? 'bg-blue-600 text-white' : 'bg-[var(--card-hover)]'}`}
+                    >
+                      {cat === 'all' ? (language === 'ar' ? 'الكل' : 'All') : 
+                       cat === 'trigger' ? (language === 'ar' ? 'محفزات' : 'Triggers') :
+                       cat === 'action' ? (language === 'ar' ? 'إجراءات' : 'Actions') :
+                       cat === 'ai' ? 'AI' :
+                       (language === 'ar' ? 'منطق' : 'Logic')}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Tools Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredTools.map(tool => (
+                  <div
+                    key={tool.id}
+                    className="p-4 bg-[var(--card)] border border-[var(--border)] rounded-xl hover:border-blue-500 transition-colors cursor-pointer"
+                    onClick={() => {
+                      if (selectedWorkflow) {
+                        addStep(tool)
+                        setView('editor')
+                      } else {
+                        alert(language === 'ar' ? 'أنشئ سير عمل أولاً' : 'Create a workflow first')
+                      }
+                    }}
+                  >
+                    <div className="flex items-start gap-3">
+                      <span className="text-3xl">{tool.icon}</span>
+                      <div className="flex-1">
+                        <h4 className="font-semibold">{language === 'ar' ? tool.nameAr : tool.name}</h4>
+                        <p className="text-sm text-[var(--muted)]">{language === 'ar' ? tool.descriptionAr : tool.description}</p>
+                        <div className="mt-2">
+                          <span className={`text-xs px-2 py-0.5 rounded-full ${
+                            tool.category === 'trigger' ? 'bg-green-500/20 text-green-400' :
+                            tool.category === 'action' ? 'bg-blue-500/20 text-blue-400' :
+                            tool.category === 'ai' ? 'bg-purple-500/20 text-purple-400' :
+                            'bg-orange-500/20 text-orange-400'
+                          }`}>
+                            {tool.category}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Workflows List */}
+        {view === 'list' && (
+          <div className="flex-1 p-6 overflow-auto">
+            <div className="max-w-4xl mx-auto">
+              {/* Create New */}
+              <div className="flex gap-3 mb-6">
+                <button
+                  onClick={() => createWorkflow()}
+                  className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl font-medium hover:opacity-90 transition-opacity"
+                >
+                  ➕ {language === 'ar' ? 'سير عمل جديد' : 'New Workflow'}
+                </button>
+                <button
+                  onClick={() => setShowTemplates(true)}
+                  className="px-4 py-3 bg-[var(--card)] border border-[var(--border)] rounded-xl hover:bg-[var(--card-hover)]"
+                >
+                  📋 {language === 'ar' ? 'من قالب' : 'From Template'}
+                </button>
+              </div>
+
+              {/* Templates Modal */}
+              {showTemplates && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                  <div className="bg-[var(--card)] rounded-2xl p-6 max-w-2xl w-full max-h-[80vh] overflow-auto">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-xl font-bold">{language === 'ar' ? 'قوالب سير العمل' : 'Workflow Templates'}</h3>
+                      <button onClick={() => setShowTemplates(false)} className="text-2xl">×</button>
+                    </div>
+                    <div className="grid gap-3">
+                      {WORKFLOW_TEMPLATES.map(template => (
+                        <button
+                          key={template.id}
+                          onClick={() => createWorkflow(template)}
+                          className="p-4 bg-[var(--bg)] rounded-xl text-left hover:bg-[var(--card-hover)] transition-colors"
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className="text-3xl">{template.icon}</span>
+                            <div>
+                              <h4 className="font-semibold">{language === 'ar' ? template.nameAr : template.name}</h4>
+                              <p className="text-sm text-[var(--muted)]">{language === 'ar' ? template.descriptionAr : template.description}</p>
+                              <div className="flex gap-1 mt-2">
+                                {template.steps.map((s, i) => (
+                                  <span key={i} className="text-xs px-2 py-0.5 bg-[var(--card)] rounded-full">{s.type}</span>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Workflows List */}
+              {workflows.length === 0 ? (
+                <div className="text-center py-16 text-[var(--muted)]">
+                  <span className="text-6xl block mb-4">⚡</span>
+                  <p>{language === 'ar' ? 'لا توجد سير عمل بعد' : 'No workflows yet'}</p>
+                  <p className="text-sm">{language === 'ar' ? 'أنشئ واحداً للبدء' : 'Create one to get started'}</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {workflows.map(workflow => (
+                    <div
+                      key={workflow.id}
+                      className="p-4 bg-[var(--card)] border border-[var(--border)] rounded-xl hover:border-blue-500 transition-colors"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div 
+                          className="flex-1 cursor-pointer"
+                          onClick={() => { setSelectedWorkflow(workflow); setView('editor') }}
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className={`w-3 h-3 rounded-full ${workflow.enabled ? 'bg-green-500' : 'bg-gray-500'}`} />
+                            <h4 className="font-semibold">{workflow.name}</h4>
+                          </div>
+                          <p className="text-sm text-[var(--muted)] mt-1">{workflow.description || (language === 'ar' ? 'بدون وصف' : 'No description')}</p>
+                          <div className="flex gap-4 mt-2 text-xs text-[var(--muted)]">
+                            <span>📊 {workflow.steps.length} {language === 'ar' ? 'خطوات' : 'steps'}</span>
+                            <span>🔄 {workflow.runCount} {language === 'ar' ? 'تشغيل' : 'runs'}</span>
+                            {workflow.lastRun && (
+                              <span>⏱️ {new Date(workflow.lastRun).toLocaleDateString()}</span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => runWorkflow(workflow)}
+                            className="p-2 bg-green-600 hover:bg-green-700 rounded-lg"
+                            title={language === 'ar' ? 'تشغيل' : 'Run'}
+                          >
+                            ▶️
+                          </button>
+                          <button
+                            onClick={() => updateWorkflow({ ...workflow, enabled: !workflow.enabled })}
+                            className={`p-2 rounded-lg ${workflow.enabled ? 'bg-blue-600' : 'bg-gray-600'}`}
+                            title={workflow.enabled ? 'Disable' : 'Enable'}
+                          >
+                            {workflow.enabled ? '✓' : '○'}
+                          </button>
+                          <button
+                            onClick={() => deleteWorkflow(workflow.id)}
+                            className="p-2 hover:bg-red-600/20 text-red-400 rounded-lg"
+                            title={language === 'ar' ? 'حذف' : 'Delete'}
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Workflow Editor */}
+        {view === 'editor' && selectedWorkflow && (
+          <div className="flex-1 flex">
+            {/* Editor Main */}
+            <div className="flex-1 p-6 overflow-auto">
+              <div className="max-w-3xl mx-auto">
+                {/* Workflow Info */}
+                <div className="mb-6">
+                  <input
+                    type="text"
+                    value={selectedWorkflow.name}
+                    onChange={(e) => updateWorkflow({ ...selectedWorkflow, name: e.target.value })}
+                    className="text-2xl font-bold bg-transparent border-none outline-none w-full"
+                    placeholder={language === 'ar' ? 'اسم سير العمل' : 'Workflow Name'}
+                  />
+                  <input
+                    type="text"
+                    value={selectedWorkflow.description}
+                    onChange={(e) => updateWorkflow({ ...selectedWorkflow, description: e.target.value })}
+                    className="text-sm text-[var(--muted)] bg-transparent border-none outline-none w-full mt-1"
+                    placeholder={language === 'ar' ? 'الوصف...' : 'Description...'}
+                  />
+                </div>
+
+                {/* Steps */}
+                <div className="space-y-3">
+                  {selectedWorkflow.steps.length === 0 ? (
+                    <div className="text-center py-12 border-2 border-dashed border-[var(--border)] rounded-xl">
+                      <p className="text-[var(--muted)]">{language === 'ar' ? 'اسحب أدوات هنا أو اضغط على أداة من القائمة' : 'Drag tools here or click a tool from the panel'}</p>
+                      <button
+                        onClick={() => setView('tools')}
+                        className="mt-4 px-4 py-2 bg-blue-600 rounded-lg text-sm"
+                      >
+                        🔧 {language === 'ar' ? 'تصفح الأدوات' : 'Browse Tools'}
+                      </button>
+                    </div>
+                  ) : (
+                    selectedWorkflow.steps.map((step, idx) => {
+                      const tool = AUTOMATION_TOOLS.find(t => 
+                        t.name === step.name || t.nameAr === step.name || t.id === step.type
+                      )
+                      return (
+                        <div
+                          key={step.id}
+                          className={`p-4 bg-[var(--card)] border rounded-xl ${step.enabled ? 'border-[var(--border)]' : 'border-gray-600 opacity-60'}`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className="text-2xl">{tool?.icon || '⚙️'}</span>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium">{step.name}</span>
+                                <span className="text-xs px-2 py-0.5 bg-[var(--bg)] rounded-full">{idx + 1}</span>
+                              </div>
+                              {tool && (
+                                <p className="text-xs text-[var(--muted)]">
+                                  {language === 'ar' ? tool.descriptionAr : tool.description}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => moveStep(step.id, 'up')}
+                                disabled={idx === 0}
+                                className="p-1.5 hover:bg-[var(--card-hover)] rounded disabled:opacity-30"
+                              >
+                                ↑
+                              </button>
+                              <button
+                                onClick={() => moveStep(step.id, 'down')}
+                                disabled={idx === selectedWorkflow.steps.length - 1}
+                                className="p-1.5 hover:bg-[var(--card-hover)] rounded disabled:opacity-30"
+                              >
+                                ↓
+                              </button>
+                              <button
+                                onClick={() => setEditingStep(editingStep?.id === step.id ? null : step)}
+                                className="p-1.5 hover:bg-[var(--card-hover)] rounded"
+                              >
+                                ⚙️
+                              </button>
+                              <button
+                                onClick={() => {
+                                  const newSteps = selectedWorkflow.steps.map(s => 
+                                    s.id === step.id ? { ...s, enabled: !s.enabled } : s
+                                  )
+                                  updateWorkflow({ ...selectedWorkflow, steps: newSteps })
+                                }}
+                                className={`p-1.5 rounded ${step.enabled ? 'text-green-400' : 'text-gray-500'}`}
+                              >
+                                {step.enabled ? '✓' : '○'}
+                              </button>
+                              <button
+                                onClick={() => removeStep(step.id)}
+                                className="p-1.5 hover:bg-red-600/20 text-red-400 rounded"
+                              >
+                                ×
+                              </button>
+                            </div>
+                          </div>
+                          
+                          {/* Step Config */}
+                          {editingStep?.id === step.id && tool && (
+                            <div className="mt-4 pt-4 border-t border-[var(--border)] space-y-3">
+                              {tool.config.map(cfg => (
+                                <div key={cfg.key}>
+                                  <label className="text-sm text-[var(--muted)] block mb-1">
+                                    {language === 'ar' ? cfg.labelAr : cfg.label}
+                                  </label>
+                                  {cfg.type === 'select' ? (
+                                    <select
+                                      value={step.config[cfg.key] || ''}
+                                      onChange={(e) => {
+                                        const newSteps = selectedWorkflow.steps.map(s => 
+                                          s.id === step.id ? { ...s, config: { ...s.config, [cfg.key]: e.target.value } } : s
+                                        )
+                                        updateWorkflow({ ...selectedWorkflow, steps: newSteps })
+                                      }}
+                                      className="w-full px-3 py-2 bg-[var(--bg)] border border-[var(--border)] rounded-lg"
+                                    >
+                                      <option value="">--</option>
+                                      {cfg.options?.map(opt => (
+                                        <option key={opt} value={opt}>{opt}</option>
+                                      ))}
+                                    </select>
+                                  ) : cfg.type === 'textarea' ? (
+                                    <textarea
+                                      value={step.config[cfg.key] || ''}
+                                      onChange={(e) => {
+                                        const newSteps = selectedWorkflow.steps.map(s => 
+                                          s.id === step.id ? { ...s, config: { ...s.config, [cfg.key]: e.target.value } } : s
+                                        )
+                                        updateWorkflow({ ...selectedWorkflow, steps: newSteps })
+                                      }}
+                                      className="w-full px-3 py-2 bg-[var(--bg)] border border-[var(--border)] rounded-lg resize-none h-24"
+                                    />
+                                  ) : (
+                                    <input
+                                      type={cfg.type}
+                                      value={step.config[cfg.key] || ''}
+                                      onChange={(e) => {
+                                        const newSteps = selectedWorkflow.steps.map(s => 
+                                          s.id === step.id ? { ...s, config: { ...s.config, [cfg.key]: e.target.value } } : s
+                                        )
+                                        updateWorkflow({ ...selectedWorkflow, steps: newSteps })
+                                      }}
+                                      className="w-full px-3 py-2 bg-[var(--bg)] border border-[var(--border)] rounded-lg"
+                                    />
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })
+                  )}
+                </div>
+
+                {/* Add Step Button */}
+                {selectedWorkflow.steps.length > 0 && (
+                  <button
+                    onClick={() => setView('tools')}
+                    className="w-full mt-4 py-3 border-2 border-dashed border-[var(--border)] rounded-xl text-[var(--muted)] hover:border-blue-500 hover:text-blue-400 transition-colors"
+                  >
+                    + {language === 'ar' ? 'إضافة خطوة' : 'Add Step'}
+                  </button>
+                )}
+
+                {/* Actions */}
+                <div className="flex gap-3 mt-6">
+                  <button
+                    onClick={() => { setSelectedWorkflow(null); setView('list'); setExecutionResults(null) }}
+                    className="px-4 py-2 bg-[var(--card-hover)] rounded-lg"
+                  >
+                    ← {language === 'ar' ? 'رجوع' : 'Back'}
+                  </button>
+                  <button
+                    onClick={() => runWorkflow(selectedWorkflow)}
+                    disabled={isExecuting}
+                    className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 rounded-lg font-medium"
+                  >
+                    {isExecuting ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <span className="animate-spin">⚙️</span>
+                        {language === 'ar' ? 'جاري التنفيذ...' : 'Executing...'}
+                      </span>
+                    ) : (
+                      <>▶️ {language === 'ar' ? 'تشغيل الآن' : 'Run Now'}</>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => updateWorkflow({ ...selectedWorkflow, enabled: !selectedWorkflow.enabled })}
+                    className={`px-4 py-2 rounded-lg ${selectedWorkflow.enabled ? 'bg-blue-600' : 'bg-gray-600'}`}
+                  >
+                    {selectedWorkflow.enabled ? (language === 'ar' ? '✓ مفعّل' : '✓ Enabled') : (language === 'ar' ? 'تفعيل' : 'Enable')}
+                  </button>
+                </div>
+
+                {/* Execution Results */}
+                {executionResults && (
+                  <div className="mt-6 p-4 rounded-xl border border-[var(--border)] bg-[var(--bg)]">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="font-medium flex items-center gap-2">
+                        {executionResults.success ? '✅' : '❌'}
+                        {language === 'ar' ? 'نتائج التنفيذ' : 'Execution Results'}
+                      </h4>
+                      <button
+                        onClick={() => setExecutionResults(null)}
+                        className="text-[var(--muted)] hover:text-white"
+                      >
+                        ✕
+                      </button>
+                    </div>
+
+                    {executionResults.error && (
+                      <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm mb-3">
+                        {executionResults.error}
+                      </div>
+                    )}
+
+                    {executionResults.results && executionResults.results.length > 0 && (
+                      <div className="space-y-2 max-h-64 overflow-auto">
+                        {executionResults.results.map((result: any, i: number) => (
+                          <div
+                            key={i}
+                            className={`p-3 rounded-lg border ${
+                              result.success 
+                                ? 'border-green-500/30 bg-green-500/5' 
+                                : 'border-red-500/30 bg-red-500/5'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 mb-1">
+                              <span>{result.success ? '✓' : '✗'}</span>
+                              <span className="font-medium text-sm">{result.tool}</span>
+                              <span className="text-xs text-[var(--muted)] ml-auto">
+                                {new Date(result.timestamp).toLocaleTimeString()}
+                              </span>
+                            </div>
+                            {result.output && (
+                              <pre className="text-xs text-[var(--muted)] bg-black/20 p-2 rounded mt-2 overflow-auto max-h-32">
+                                {typeof result.output === 'object' 
+                                  ? JSON.stringify(result.output, null, 2)
+                                  : result.output}
+                              </pre>
+                            )}
+                            {result.error && (
+                              <p className="text-xs text-red-400 mt-1">{result.error}</p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {executionResults.variables && Object.keys(executionResults.variables).length > 0 && (
+                      <div className="mt-3 pt-3 border-t border-[var(--border)]">
+                        <p className="text-xs text-[var(--muted)] mb-2">
+                          {language === 'ar' ? 'المتغيرات:' : 'Variables:'}
+                        </p>
+                        <pre className="text-xs bg-black/20 p-2 rounded">
+                          {JSON.stringify(executionResults.variables, null, 2)}
+                        </pre>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}

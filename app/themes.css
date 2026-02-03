@@ -1,0 +1,536 @@
+/* ============================================
+   SOLVEIT 4-THEME SYSTEM
+   Light | Dark Black | Dark Blue | Pink
+   ============================================ */
+
+:root {
+  /* Default: Light Theme */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f3f4f6;
+  --bg-tertiary: #e5e7eb;
+  --bg-card: #ffffff;
+  --bg-hover: #f9fafb;
+  
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --text-muted: #6b7280;
+  
+  --border-color: #e5e7eb;
+  --border-light: #f3f4f6;
+  --border: #e5e7eb;
+  
+  --accent-primary: #8b5cf6;
+  --accent-secondary: #a78bfa;
+  --accent-bg: #ede9fe;
+  --accent: #8b5cf6;
+  
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  --info: #3b82f6;
+}
+
+/* ============================================
+   DARK BLACK THEME
+   ============================================ */
+[data-theme="dark"] {
+  --bg-primary: #0a0a0a;
+  --bg-secondary: #171717;
+  --bg-tertiary: #262626;
+  --bg-card: #171717;
+  --bg-hover: #262626;
+  
+  --text-primary: #fafafa;
+  --text-secondary: #a3a3a3;
+  --text-muted: #737373;
+  
+  --border-color: #404040;
+  --border-light: #262626;
+  --border: #404040;
+  
+  --accent-primary: #a78bfa;
+  --accent-secondary: #c4b5fd;
+  --accent-bg: #2e1065;
+  --accent: #a78bfa;
+}
+
+/* ============================================
+   DARK BLUE THEME
+   ============================================ */
+[data-theme="dark-blue"] {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #334155;
+  --bg-card: #1e293b;
+  --bg-hover: #334155;
+  
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  
+  --border-color: #475569;
+  --border-light: #334155;
+  --border: #475569;
+  
+  --accent-primary: #3b82f6;
+  --accent-secondary: #60a5fa;
+  --accent-bg: #1e3a5f;
+  --accent: #3b82f6;
+}
+
+/* ============================================
+   PINK THEME
+   ============================================ */
+[data-theme="pink"] {
+  --bg-primary: #1a0a14;
+  --bg-secondary: #2d1522;
+  --bg-tertiary: #3d1f30;
+  --bg-card: #2d1522;
+  --bg-hover: #3d1f30;
+  
+  --text-primary: #fdf2f8;
+  --text-secondary: #f9a8d4;
+  --text-muted: #be185d;
+  
+  --border-color: #831843;
+  --border-light: #3d1f30;
+  --border: #831843;
+  
+  --accent-primary: #ec4899;
+  --accent-secondary: #f472b6;
+  --accent-bg: #500724;
+  --accent: #ec4899;
+}
+
+/* ============================================
+   GLOBAL BODY OVERRIDE
+   ============================================ */
+[data-theme] body {
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+[data-theme] .min-h-screen {
+  background-color: var(--bg-primary) !important;
+}
+
+/* ============================================
+   ZINC & GRAY BACKGROUND OVERRIDES
+   ============================================ */
+[data-theme] .bg-gray-900,
+[data-theme] .dark\:bg-gray-900,
+[data-theme] .bg-zinc-900,
+[data-theme] .dark\:bg-zinc-900,
+[data-theme] .bg-\[\#0a0a0a\],
+[data-theme] .bg-\[\#111\] {
+  background-color: var(--bg-primary) !important;
+}
+
+[data-theme] .bg-gray-800,
+[data-theme] .dark\:bg-gray-800,
+[data-theme] .bg-zinc-800,
+[data-theme] .dark\:bg-zinc-800,
+[data-theme] .bg-\[\#171717\],
+[data-theme] .bg-gray-800\/50,
+[data-theme] .bg-zinc-800\/50,
+[data-theme] .bg-gray-800\/30,
+[data-theme] .bg-zinc-800\/30 {
+  background-color: var(--bg-secondary) !important;
+}
+
+[data-theme] .bg-gray-700,
+[data-theme] .dark\:bg-gray-700,
+[data-theme] .bg-zinc-700,
+[data-theme] .dark\:bg-zinc-700,
+[data-theme] .bg-gray-700\/50,
+[data-theme] .bg-zinc-700\/50 {
+  background-color: var(--bg-tertiary) !important;
+}
+
+[data-theme] .bg-gray-600,
+[data-theme] .dark\:bg-gray-600,
+[data-theme] .bg-zinc-600,
+[data-theme] .dark\:bg-zinc-600 {
+  background-color: var(--bg-tertiary) !important;
+}
+
+[data-theme] .bg-gray-100,
+[data-theme] .bg-gray-50,
+[data-theme] .bg-zinc-100,
+[data-theme] .bg-zinc-50 {
+  background-color: var(--bg-secondary) !important;
+}
+
+/* ============================================
+   HOVER STATE OVERRIDES
+   ============================================ */
+[data-theme] .hover\:bg-gray-900:hover,
+[data-theme] .dark\:hover\:bg-gray-900:hover {
+  background-color: var(--bg-primary) !important;
+}
+
+[data-theme] .hover\:bg-gray-800:hover,
+[data-theme] .dark\:hover\:bg-gray-800:hover {
+  background-color: var(--bg-secondary) !important;
+}
+
+[data-theme] .hover\:bg-gray-700:hover,
+[data-theme] .dark\:hover\:bg-gray-700:hover,
+[data-theme] .hover\:bg-gray-700\/50:hover {
+  background-color: var(--bg-tertiary) !important;
+}
+
+[data-theme] .hover\:bg-gray-600:hover {
+  background-color: var(--bg-hover) !important;
+}
+
+/* ============================================
+   TEXT COLOR OVERRIDES (Gray + Zinc)
+   ============================================ */
+[data-theme] .text-white,
+[data-theme] .dark\:text-white {
+  color: var(--text-primary) !important;
+}
+
+[data-theme] .text-gray-100,
+[data-theme] .dark\:text-gray-100,
+[data-theme] .text-gray-200,
+[data-theme] .dark\:text-gray-200,
+[data-theme] .text-zinc-100,
+[data-theme] .dark\:text-zinc-100,
+[data-theme] .text-zinc-200,
+[data-theme] .dark\:text-zinc-200 {
+  color: var(--text-primary) !important;
+}
+
+[data-theme] .text-gray-300,
+[data-theme] .dark\:text-gray-300,
+[data-theme] .text-zinc-300,
+[data-theme] .dark\:text-zinc-300 {
+  color: var(--text-secondary) !important;
+}
+
+[data-theme] .text-gray-400,
+[data-theme] .dark\:text-gray-400,
+[data-theme] .text-zinc-400,
+[data-theme] .dark\:text-zinc-400 {
+  color: var(--text-secondary) !important;
+}
+
+[data-theme] .text-gray-500,
+[data-theme] .dark\:text-gray-500,
+[data-theme] .text-gray-600,
+[data-theme] .text-zinc-500,
+[data-theme] .dark\:text-zinc-500,
+[data-theme] .text-zinc-600 {
+  color: var(--text-muted) !important;
+}
+
+/* Light theme text needs darker colors */
+[data-theme="light"] .text-white {
+  color: var(--text-primary) !important;
+}
+
+[data-theme="light"] .text-gray-300,
+[data-theme="light"] .text-gray-400 {
+  color: var(--text-secondary) !important;
+}
+
+/* ============================================
+   BORDER COLOR OVERRIDES (Gray + Zinc)
+   ============================================ */
+[data-theme] .border-gray-900,
+[data-theme] .border-zinc-900 {
+  border-color: var(--border-light) !important;
+}
+
+[data-theme] .border-gray-800,
+[data-theme] .dark\:border-gray-800,
+[data-theme] .border-zinc-800,
+[data-theme] .dark\:border-zinc-800 {
+  border-color: var(--border-light) !important;
+}
+
+[data-theme] .border-gray-700,
+[data-theme] .dark\:border-gray-700,
+[data-theme] .border-zinc-700,
+[data-theme] .dark\:border-zinc-700 {
+  border-color: var(--border-color) !important;
+}
+
+[data-theme] .border-gray-600,
+[data-theme] .dark\:border-gray-600,
+[data-theme] .border-zinc-600,
+[data-theme] .dark\:border-zinc-600 {
+  border-color: var(--border-color) !important;
+}
+
+[data-theme] .divide-gray-700 > * + *,
+[data-theme] .divide-zinc-700 > * + * {
+  border-color: var(--border-color) !important;
+}
+
+/* ============================================
+   ACCENT COLOR OVERRIDES (Purple → Theme Color)
+   ============================================ */
+
+/* Dark Blue: Purple → Blue */
+[data-theme="dark-blue"] .text-purple-400,
+[data-theme="dark-blue"] .dark\:text-purple-400,
+[data-theme="dark-blue"] .text-purple-500,
+[data-theme="dark-blue"] .text-purple-600 {
+  color: var(--accent-secondary) !important;
+}
+
+[data-theme="dark-blue"] .bg-purple-500,
+[data-theme="dark-blue"] .bg-purple-600,
+[data-theme="dark-blue"] .bg-purple-500\/20 {
+  background-color: var(--accent-primary) !important;
+}
+
+[data-theme="dark-blue"] .hover\:bg-purple-600:hover,
+[data-theme="dark-blue"] .hover\:bg-purple-700:hover {
+  background-color: #2563eb !important;
+}
+
+[data-theme="dark-blue"] .border-purple-500,
+[data-theme="dark-blue"] .border-purple-600 {
+  border-color: var(--accent-primary) !important;
+}
+
+[data-theme="dark-blue"] .ring-purple-500,
+[data-theme="dark-blue"] .focus\:ring-purple-500:focus {
+  --tw-ring-color: var(--accent-primary) !important;
+}
+
+[data-theme="dark-blue"] .from-purple-500,
+[data-theme="dark-blue"] .from-purple-600 {
+  --tw-gradient-from: var(--accent-primary) !important;
+}
+
+[data-theme="dark-blue"] .to-pink-500,
+[data-theme="dark-blue"] .to-pink-600,
+[data-theme="dark-blue"] .to-blue-500 {
+  --tw-gradient-to: #0ea5e9 !important;
+}
+
+/* Pink: Purple → Pink */
+[data-theme="pink"] .text-purple-400,
+[data-theme="pink"] .dark\:text-purple-400,
+[data-theme="pink"] .text-purple-500,
+[data-theme="pink"] .text-purple-600 {
+  color: var(--accent-secondary) !important;
+}
+
+[data-theme="pink"] .bg-purple-500,
+[data-theme="pink"] .bg-purple-600,
+[data-theme="pink"] .bg-purple-500\/20 {
+  background-color: var(--accent-primary) !important;
+}
+
+[data-theme="pink"] .hover\:bg-purple-600:hover,
+[data-theme="pink"] .hover\:bg-purple-700:hover {
+  background-color: #db2777 !important;
+}
+
+[data-theme="pink"] .border-purple-500,
+[data-theme="pink"] .border-purple-600 {
+  border-color: var(--accent-primary) !important;
+}
+
+[data-theme="pink"] .ring-purple-500,
+[data-theme="pink"] .focus\:ring-purple-500:focus {
+  --tw-ring-color: var(--accent-primary) !important;
+}
+
+[data-theme="pink"] .from-purple-500,
+[data-theme="pink"] .from-purple-600 {
+  --tw-gradient-from: var(--accent-primary) !important;
+}
+
+[data-theme="pink"] .to-pink-500,
+[data-theme="pink"] .to-pink-600,
+[data-theme="pink"] .to-blue-500 {
+  --tw-gradient-to: #f472b6 !important;
+}
+
+/* ============================================
+   INPUT & FORM ELEMENTS
+   ============================================ */
+[data-theme] input:not([type="checkbox"]):not([type="radio"]),
+[data-theme] textarea,
+[data-theme] select {
+  background-color: var(--bg-tertiary) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+[data-theme] input::placeholder,
+[data-theme] textarea::placeholder {
+  color: var(--text-muted) !important;
+}
+
+[data-theme] input:focus,
+[data-theme] textarea:focus,
+[data-theme] select:focus {
+  border-color: var(--accent-primary) !important;
+  outline-color: var(--accent-primary) !important;
+}
+
+/* ============================================
+   SCROLLBAR STYLING
+   ============================================ */
+[data-theme] ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+[data-theme] ::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+[data-theme] ::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+[data-theme] ::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* ============================================
+   SIDEBAR SPECIFIC
+   ============================================ */
+[data-theme] aside,
+[data-theme] .sidebar {
+  background-color: var(--bg-secondary) !important;
+  border-color: var(--border-color) !important;
+}
+
+/* ============================================
+   CARD & PANEL COMPONENTS
+   ============================================ */
+[data-theme] .card,
+[data-theme] .panel,
+[data-theme] .modal {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-color) !important;
+}
+
+/* ============================================
+   LIGHT THEME SPECIFIC OVERRIDES
+   ============================================ */
+[data-theme="light"] {
+  color-scheme: light;
+}
+
+[data-theme="light"] .bg-gray-900 {
+  background-color: var(--bg-primary) !important;
+}
+
+[data-theme="light"] .bg-gray-800 {
+  background-color: var(--bg-secondary) !important;
+}
+
+[data-theme="light"] .bg-gray-700 {
+  background-color: var(--bg-tertiary) !important;
+}
+
+[data-theme="light"] .text-white {
+  color: var(--text-primary) !important;
+}
+
+[data-theme="light"] .text-gray-100,
+[data-theme="light"] .text-gray-200 {
+  color: var(--text-primary) !important;
+}
+
+[data-theme="light"] .text-gray-300,
+[data-theme="light"] .text-gray-400 {
+  color: var(--text-secondary) !important;
+}
+
+[data-theme="light"] .border-gray-700,
+[data-theme="light"] .border-gray-600 {
+  border-color: var(--border-color) !important;
+}
+
+/* Light theme cards need shadow */
+[data-theme="light"] .bg-gray-800,
+[data-theme="light"] .bg-gray-800\/50 {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+}
+
+/* ============================================
+   GRADIENT OVERRIDES
+   ============================================ */
+[data-theme="dark-blue"] .bg-gradient-to-r,
+[data-theme="dark-blue"] .bg-gradient-to-br {
+  --tw-gradient-from: var(--accent-primary);
+  --tw-gradient-to: #0ea5e9;
+}
+
+[data-theme="pink"] .bg-gradient-to-r,
+[data-theme="pink"] .bg-gradient-to-br {
+  --tw-gradient-from: var(--accent-primary);
+  --tw-gradient-to: #f472b6;
+}
+
+/* ============================================
+   BUTTON OVERRIDES
+   ============================================ */
+[data-theme="dark-blue"] button.bg-purple-500,
+[data-theme="dark-blue"] button.bg-purple-600 {
+  background: linear-gradient(135deg, #3b82f6 0%, #0ea5e9 100%) !important;
+}
+
+[data-theme="pink"] button.bg-purple-500,
+[data-theme="pink"] button.bg-purple-600 {
+  background: linear-gradient(135deg, #ec4899 0%, #f472b6 100%) !important;
+}
+
+/* ============================================
+   CODE EDITOR & PREVIEW
+   ============================================ */
+[data-theme] pre,
+[data-theme] code {
+  background-color: var(--bg-primary) !important;
+}
+
+[data-theme] .bg-gray-900\/50 {
+  background-color: rgba(var(--bg-primary), 0.5) !important;
+}
+
+/* ============================================
+   DROPDOWN & MENU
+   ============================================ */
+[data-theme] .dropdown,
+[data-theme] .menu,
+[data-theme] [role="menu"] {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-color) !important;
+}
+
+/* ============================================
+   TOAST & NOTIFICATIONS
+   ============================================ */
+[data-theme] .toast {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+/* ============================================
+   ANIMATIONS FOR THEME TRANSITIONS
+   ============================================ */
+[data-theme] * {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+/* Exclude elements that shouldn't transition */
+[data-theme] iframe,
+[data-theme] video,
+[data-theme] img,
+[data-theme] canvas {
+  transition: none;
+}
