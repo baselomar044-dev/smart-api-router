@@ -41,15 +41,13 @@ import computerRouter from './routes/computer';
 
 // ================== ENVIRONMENT VALIDATION ==================
 
-const requiredEnvVars = ['SUPABASE_URL', 'SUPABASE_SERVICE_KEY'];
-const missingVars = requiredEnvVars.filter(v => !process.env[v]);
+// Supabase is optional - warn but don't exit
+const optionalDBVars = ['SUPABASE_URL', 'SUPABASE_SERVICE_KEY'];
+const missingDBVars = optionalDBVars.filter(v => !process.env[v]);
 
-if (missingVars.length > 0) {
-  console.error('❌ Missing required environment variables:', missingVars.join(', '));
-  console.error('   Please configure .env file based on .env.example');
-  if (process.env.NODE_ENV === 'production') {
-    process.exit(1);
-  }
+if (missingDBVars.length > 0) {
+  console.warn('⚠️ Optional database variables not configured:', missingDBVars.join(', '));
+  console.warn('   Some features (triggers, memory, integrations) will be limited');
 }
 
 // Warn about missing AI providers
