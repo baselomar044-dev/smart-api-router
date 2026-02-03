@@ -9,10 +9,10 @@ import cron from 'node-cron';
 
 const router = Router();
 
-const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY!
-);
+// Supabase is optional - only create client if credentials exist
+const supabase = process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY
+  ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
+  : null;
 
 // In-memory store for scheduled jobs (use Redis in production)
 export const scheduledJobs = new Map<string, cron.ScheduledTask>();

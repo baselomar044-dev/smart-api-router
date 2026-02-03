@@ -8,10 +8,10 @@ import { v4 as uuidv4 } from 'uuid';
 
 const router = Router();
 
-const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY!
-);
+// Supabase is optional - only create client if credentials exist
+const supabase = process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY
+  ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
+  : null;
 
 // Voice configurations
 const VOICE_CONFIGS = {
