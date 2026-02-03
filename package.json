@@ -15,7 +15,7 @@
     "dev:server": "tsx watch server/index.ts",
     "build": "npm run build:client && npm run build:server",
     "build:client": "vite build",
-    "build:server": "esbuild server/index.ts --bundle --platform=node --outfile=dist/server.js --format=esm --external:better-sqlite3",
+    "build:server": "esbuild server/index.ts --bundle --platform=node --outfile=dist/server.js --format=esm --external:better-sqlite3 --external:fs --external:path --external:crypto --external:dotenv",
     "preview": "vite preview",
     "start": "node dist/server.js",
     "start:server": "tsx server/index.ts",
