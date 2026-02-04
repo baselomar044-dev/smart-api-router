@@ -149,8 +149,10 @@ export const translations = {
   }
 };
 
-export function t(key: keyof typeof translations.en, lang: Language = 'en'): string {
-  return translations[lang][key] || translations.en[key] || key;
+export function t(key: keyof typeof translations.en, lang: Language | 'auto' = 'en'): string {
+  // Handle 'auto' language - default to English
+  const actualLang = lang === 'auto' ? 'en' : lang;
+  return translations[actualLang]?.[key] || translations.en[key] || key;
 }
 
 export function useTranslation(lang: Language) {
