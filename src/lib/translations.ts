@@ -155,10 +155,12 @@ export function t(key: keyof typeof translations.en, lang: Language | 'auto' = '
   return translations[actualLang]?.[key] || translations.en[key] || key;
 }
 
-export function useTranslation(lang: Language) {
+export function useTranslation(lang: Language | 'auto') {
+  // Handle 'auto' language - default to English
+  const actualLang = lang === 'auto' ? 'en' : lang;
   return {
-    t: (key: keyof typeof translations.en) => t(key, lang),
-    dir: lang === 'ar' ? 'rtl' : 'ltr',
-    lang,
+    t: (key: keyof typeof translations.en) => t(key, actualLang),
+    dir: actualLang === 'ar' ? 'rtl' : 'ltr',
+    lang: actualLang,
   };
 }
