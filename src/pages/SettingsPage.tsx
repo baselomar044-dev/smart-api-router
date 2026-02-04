@@ -107,7 +107,7 @@ const SettingsPage: React.FC = () => {
     preview: { bg: string; accent: string };
   }> = [
     {
-      id: 'dark-blue',
+      id: 'dark',
       icon: <Moon size={20} />,
       preview: { bg: 'bg-[#0a0f1a]', accent: 'bg-neutral-500' },
     },
